@@ -1,103 +1,119 @@
-import Image from "next/image";
+"use client";
+
+import { useState } from 'react';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [totalHoursInput, setTotalHoursInput] = useState<string>('');
+  const [arrivalTimeInput, setArrivalTimeInput] = useState<string>('08:00');
+  const [punchOutTime, setPunchOutTime] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  const calculatePunchOutTime = () => {
+    setError(null);
+    setPunchOutTime(null);
+
+    const totalHours = parseFloat(totalHoursInput);
+    if (isNaN(totalHours) || totalHours < 0) {
+      setError('Please enter a valid number for total hours worked.');
+      return;
+    }
+
+    if (!/^\d{2}:\d{2}$/.test(arrivalTimeInput)) {
+        setError('Please enter arrival time in HH:MM format (e.g., 08:30).');
+        return;
+    }
+
+    const [arrivalHour, arrivalMinute] = arrivalTimeInput.split(':').map(Number);
+    if (arrivalHour < 0 || arrivalHour > 23 || arrivalMinute < 0 || arrivalMinute > 59) {
+        setError('Invalid arrival time.');
+        return;
+    }
+
+    const standardBiWeeklyHours = 80;
+    const remainingHoursDecimal = standardBiWeeklyHours - totalHours;
+
+    if (remainingHoursDecimal <= 0) {
+        setPunchOutTime("You've already completed your hours! Go home!");
+        return;
+    }
+
+    const remainingHours = Math.floor(remainingHoursDecimal);
+    const remainingMinutes = Math.round((remainingHoursDecimal - remainingHours) * 60);
+
+    const arrivalDate = new Date();
+    arrivalDate.setHours(arrivalHour, arrivalMinute, 0, 0);
+
+    const punchOutDate = new Date(arrivalDate.getTime());
+    punchOutDate.setHours(punchOutDate.getHours() + remainingHours);
+    punchOutDate.setMinutes(punchOutDate.getMinutes() + remainingMinutes);
+
+    const punchOutHour = punchOutDate.getHours().toString().padStart(2, '0');
+    const punchOutMinute = punchOutDate.getMinutes().toString().padStart(2, '0');
+
+    setPunchOutTime(`${punchOutHour}:${punchOutMinute}`);
+  };
+
+  return (
+    <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 dark:from-gray-800 dark:via-gray-900 dark:to-black">
+      <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-8 max-w-md w-full text-center transform transition-all hover:scale-105 duration-300">
+        <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-100 animate-pulse">
+          Punch Me Out! 🥊
+        </h1>
+        <p className="mb-6 text-gray-600 dark:text-gray-300">
+          Calculate your Friday escape time!
+        </p>
+
+        <div className="mb-4">
+          <label htmlFor="totalHours" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-left">
+            Total Hours (Last 2 Weeks)
+          </label>
+          <input
+            type="number"
+            id="totalHours"
+            value={totalHoursInput}
+            onChange={(e) => setTotalHoursInput(e.target.value)}
+            placeholder="e.g., 72.5"
+            step="0.01"
+            className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100"
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+
+        <div className="mb-6">
+          <label htmlFor="arrivalTime" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 text-left">
+            Friday Arrival Time (HH:MM)
+          </label>
+          <input
+            type="time"
+            id="arrivalTime"
+            value={arrivalTimeInput}
+            onChange={(e) => setArrivalTimeInput(e.target.value)}
+            className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+        </div>
+
+        <button
+          onClick={calculatePunchOutTime}
+          className="w-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-bold py-3 px-4 rounded-lg shadow-md hover:shadow-lg transition duration-300 ease-in-out transform hover:-translate-y-1"
         >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          Calculate Punch Out Time!
+        </button>
+
+        {error && (
+          <p className="mt-4 text-red-500 dark:text-red-400 font-semibold animate-bounce">
+            Error: {error}
+          </p>
+        )}
+
+        {punchOutTime && (
+          <div className="mt-8 p-6 bg-green-100 dark:bg-green-900 rounded-lg border border-green-300 dark:border-green-700 shadow-inner">
+            <p className="text-lg font-semibold text-green-800 dark:text-green-100">Your estimated Punch Out Time is:</p>
+            <p className="text-4xl font-extrabold text-green-600 dark:text-green-300 mt-2 animate-bounce">
+              {punchOutTime}
+            </p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">Time to pack your bags!</p>
+          </div>
+        )}
+      </div>
+    </main>
   );
 }
