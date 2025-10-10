@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import VideoModal from './components/VideoModal';
+import confetti from 'canvas-confetti';
 
 export default function Home() {
   const [totalHoursInput, setTotalHoursInput] = useState<string>('');
@@ -54,6 +55,36 @@ export default function Home() {
 
     setPunchOutTime(`${punchOutHour}:${punchOutMinute}`);
     
+    // Trigger fireworks
+    const duration = 3 * 1000;
+    const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+    const animationEnd = Date.now() + duration;
+
+    function randomInRange(min: number, max: number) {
+      return Math.random() * (max - min) + min;
+    }
+
+    const interval: NodeJS.Timeout = setInterval(function() {
+      const timeLeft = animationEnd - Date.now();
+
+      if (timeLeft <= 0) {
+        clearInterval(interval);
+        return;
+      }
+
+      const particleCount = 50 * (timeLeft / duration);
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 },
+      });
+      confetti({
+        ...defaults,
+        particleCount,
+        origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 },
+      });
+    }, 250);
+
     // Set timer for video modal
     setTimeout(() => {
       setIsModalOpen(true);
@@ -80,6 +111,7 @@ export default function Home() {
             id="totalHours"
             value={totalHoursInput}
             onChange={(e) => setTotalHoursInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && calculatePunchOutTime()}
             placeholder="e.g., 72.5"
             step="0.01"
             className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100"
@@ -95,6 +127,7 @@ export default function Home() {
             id="arrivalTime"
             value={arrivalTimeInput}
             onChange={(e) => setArrivalTimeInput(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && calculatePunchOutTime()}
             className="mt-1 block w-full px-3 py-2 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm text-gray-900 dark:text-gray-100"
           />
         </div>
@@ -113,12 +146,21 @@ export default function Home() {
         )}
 
         {punchOutTime && (
-          <div className="mt-8 p-6 bg-green-100 dark:bg-green-900 rounded-lg border border-green-300 dark:border-green-700 shadow-inner">
+          <div 
+            onClick={() => {
+              confetti({
+                particleCount: 100,
+                spread: 70,
+                origin: { y: 0.6 }
+              });
+            }}
+            className="mt-8 p-6 bg-green-100 dark:bg-green-900 rounded-lg border border-green-300 dark:border-green-700 shadow-inner cursor-pointer transition-transform hover:scale-105"
+          >
             <p className="text-lg font-semibold text-green-800 dark:text-green-100">Your estimated Punch Out Time is:</p>
             <p className="text-4xl font-extrabold text-green-600 dark:text-green-300 mt-2 animate-bounce">
               {punchOutTime}
             </p>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">Time to pack your bags!</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-3">Time to pack your bags! (Click for celebration! 🎉)</p>
           </div>
         )}
       </div>
