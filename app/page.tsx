@@ -1,12 +1,14 @@
 "use client";
 
 import { useState } from 'react';
+import VideoModal from './components/VideoModal';
 
 export default function Home() {
   const [totalHoursInput, setTotalHoursInput] = useState<string>('');
   const [arrivalTimeInput, setArrivalTimeInput] = useState<string>('08:00');
   const [punchOutTime, setPunchOutTime] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const calculatePunchOutTime = () => {
     setError(null);
@@ -51,10 +53,16 @@ export default function Home() {
     const punchOutMinute = punchOutDate.getMinutes().toString().padStart(2, '0');
 
     setPunchOutTime(`${punchOutHour}:${punchOutMinute}`);
+    
+    // Set timer for video modal
+    setTimeout(() => {
+      setIsModalOpen(true);
+    }, 5000);
   };
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-8 bg-gradient-to-br from-indigo-100 via-purple-100 to-pink-100 dark:from-gray-800 dark:via-gray-900 dark:to-black">
+      <VideoModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} />
       <div className="bg-white dark:bg-gray-800 shadow-xl rounded-lg p-8 max-w-md w-full text-center transform transition-all hover:scale-105 duration-300">
         <h1 className="text-3xl font-bold mb-6 text-gray-800 dark:text-gray-100 animate-pulse">
           Punch Me Out! 🥊
