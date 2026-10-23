@@ -2,17 +2,33 @@
 
 import { useState } from "react";
 
+/** Johnny Paycheck - "Take This Job And Shove It": what plays on the main page. */
+const DEFAULT_VIDEO = "https://www.youtube.com/embed/gj2iGAifSNI?autoplay=1";
+/** Dolly Parton - "9 To 5": the song the toggle button switches to. */
+const LINDSAY_VIDEO =
+  "https://www.youtube.com/embed/UbxUSsFXYo4?si=Tgx5Z2GLnIY0Wz8R&autoplay=1";
+const DEFAULT_MESSAGE =
+  "Because of Lindsay, you may now choose this song instead...";
+
 interface VideoModalProps {
   isOpen: boolean;
   onClose: () => void;
+  /** Video that plays when the modal opens (and after "Switch back"). */
+  defaultVideo?: string;
+  /** Text shown in the modal. */
+  message?: string;
+  /** Whether to show the "Play Lindsay's song" / "Switch back" toggle. */
+  showSongToggle?: boolean;
 }
 
-const DEFAULT_VIDEO = "https://www.youtube.com/embed/gj2iGAifSNI?autoplay=1";
-const LINDSAY_VIDEO =
-  "https://www.youtube.com/embed/UbxUSsFXYo4?si=Tgx5Z2GLnIY0Wz8R&autoplay=1";
-
-export default function VideoModal({ isOpen, onClose }: VideoModalProps) {
-  const [videoSrc, setVideoSrc] = useState(DEFAULT_VIDEO);
+export default function VideoModal({
+  isOpen,
+  onClose,
+  defaultVideo = DEFAULT_VIDEO,
+  message = DEFAULT_MESSAGE,
+  showSongToggle = true,
+}: VideoModalProps) {
+  const [videoSrc, setVideoSrc] = useState(defaultVideo);
 
   if (!isOpen) return null;
 
@@ -33,17 +49,17 @@ export default function VideoModal({ isOpen, onClose }: VideoModalProps) {
           />
         </div>
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <p className="text-gray-700 text-sm">
-            Because of Lindsay, you may now choose this song instead...
-          </p>
-          <button
-            onClick={() =>
-              setVideoSrc(isLindsaySong ? DEFAULT_VIDEO : LINDSAY_VIDEO)
-            }
-            className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-          >
-            {isLindsaySong ? "Switch back" : "Play Lindsay's song"}
-          </button>
+          <p className="text-gray-700 text-sm">{message}</p>
+          {showSongToggle && (
+            <button
+              onClick={() =>
+                setVideoSrc(isLindsaySong ? defaultVideo : LINDSAY_VIDEO)
+              }
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+            >
+              {isLindsaySong ? "Switch back" : "Play Lindsay's song"}
+            </button>
+          )}
         </div>
         <button
           onClick={onClose}
